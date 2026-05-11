@@ -1,10 +1,10 @@
 const roomTypes = [
-  "Enemigos",
-  "Cofre",
-  "NPC",
-  "Puzzle",
-  "Trampa",
-  "Vacía"
+  "E",
+  "C",
+  "N",
+  "P",
+  "T",
+  "V"
 ]
 
 function random(arr){
@@ -17,101 +17,118 @@ function generateDungeon(){
 
   dungeon.innerHTML = ""
 
-  const map = document.createElement("div")
+  const canvas = document.createElement("canvas")
 
-  map.style.position = "relative"
-  map.style.width = "1400px"
-  map.style.height = "900px"
-  map.style.margin = "auto"
+  canvas.width = 1400
+  canvas.height = 900
+
+  dungeon.appendChild(canvas)
+
+  const ctx = canvas.getContext("2d")
+
+  ctx.fillStyle = "#111"
+  ctx.fillRect(0,0,canvas.width,canvas.height)
 
   const rooms = []
 
-  let x = 650
-  let y = 80
+  let x = 700
+  let y = 100
 
   const totalRooms = 15
 
-  for(let i = 0; i < totalRooms; i++){
+  for(let i=0;i<totalRooms;i++){
 
     const room = {
-      id: i + 1,
+      id:i+1,
       x,
       y,
-      type: i === totalRooms - 1
-        ? "Boss"
+      width:80,
+      height:80,
+      type:i === totalRooms-1
+        ? "BOSS"
         : random(roomTypes)
     }
 
     rooms.push(room)
 
-    const direction = Math.floor(Math.random() * 3)
+    const dir = Math.floor(Math.random()*3)
 
-    if(direction === 0){
-      x += 180
+    if(dir === 0){
+      x += 160
     }
 
-    if(direction === 1){
-      x -= 180
+    if(dir === 1){
+      x -= 160
     }
 
-    y += 120
+    y += 100
   }
 
-  rooms.forEach((room,index)=>{
+  ctx.strokeStyle = "white"
+  ctx.lineWidth = 4
 
-    if(index > 0){
+  for(let i=1;i<rooms.length;i++){
 
-      const prev = rooms[index - 1]
+    const prev = rooms[i-1]
+    const room = rooms[i]
 
-      const dx = room.x - prev.x
-      const dy = room.y - prev.y
+    ctx.beginPath()
 
-      const distance = Math.sqrt(dx*dx + dy*dy)
+    ctx.moveTo(
+      prev.x + prev.width/2,
+      prev.y + prev.height/2
+    )
 
-      const angle = Math.atan2(dy,dx) * 180 / Math.PI
+    ctx.lineTo(
+      room.x + room.width/2,
+      room.y + room.height/2
+    )
 
-      const line = document.createElement("div")
+    ctx.stroke()
+  }
 
-      line.style.position = "absolute"
-      line.style.left = `${prev.x + 50}px`
-      line.style.top = `${prev.y + 50}px`
-      line.style.width = `${distance}px`
-      line.style.height = "6px"
-      line.style.background = "white"
-      line.style.transformOrigin = "0 0"
-      line.style.transform = `rotate(${angle}deg)`
+  rooms.forEach(room => {
 
-      map.appendChild(line)
+    if(room.type === "BOSS"){
+      ctx.fillStyle = "#7f1d1d"
+    } else {
+      ctx.fillStyle = "#27272a"
     }
 
-    const div = document.createElement("div")
+    ctx.fillRect(
+      room.x,
+      room.y,
+      room.width,
+      room.height
+    )
 
-    div.className = "room"
+    ctx.strokeStyle = "white"
 
-    div.style.position = "absolute"
-    div.style.left = `${room.x}px`
-    div.style.top = `${room.y}px`
-    div.style.width = "100px"
-    div.style.height = "100px"
+    ctx.strokeRect(
+      room.x,
+      room.y,
+      room.width,
+      room.height
+    )
 
-    div.innerHTML = `
-      <div style="font-size:22px;font-weight:bold;">
-        ${room.id}
-      </div>
+    ctx.fillStyle = "white"
 
-      <div style="margin-top:8px;">
-        ${room.type}
-      </div>
-    `
+    ctx.font = "16px Arial"
 
-    if(room.type === "Boss"){
-      div.style.background = "darkred"
-    }
+    ctx.fillText(
+      room.id,
+      room.x + 30,
+      room.y + 25
+    )
 
-    map.appendChild(div)
+    ctx.font = "14px Arial"
+
+    ctx.fillText(
+      room.type,
+      room.x + 18,
+      room.y + 50
+    )
   })
-
-  dungeon.appendChild(map)
 }
 
 generateDungeon()
