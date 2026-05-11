@@ -54,22 +54,14 @@ function carveCorridor(x1,y1,x2,y2){
 
     map[y][x] = 1
 
-    if(x < x2){
-      x++
-    }else{
-      x--
-    }
+    x += x < x2 ? 1 : -1
   }
 
   while(y !== y2){
 
     map[y][x] = 1
 
-    if(y < y2){
-      y++
-    }else{
-      y--
-    }
+    y += y < y2 ? 1 : -1
   }
 }
 
@@ -79,12 +71,7 @@ function drawMap(startRoom,bossRoom){
 
   ctx.fillStyle = "#ffffff"
 
-  ctx.fillRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  )
+  ctx.fillRect(0,0,canvas.width,canvas.height)
 
   for(let y=0;y<ROWS;y++){
 
@@ -142,42 +129,80 @@ function drawMap(startRoom,bossRoom){
   ctx.fill()
 }
 
+function roomOverlaps(x,y,w,h){
+
+  for(let yy=y-1;yy<y+h+1;yy++){
+
+    for(let xx=x-1;xx<x+w+1;xx++){
+
+      if(
+        yy >= 0 &&
+        xx >= 0 &&
+        yy < ROWS &&
+        xx < COLS
+      ){
+
+        if(map[yy][xx] === 1){
+          return true
+        }
+      }
+    }
+  }
+
+  return false
+}
+
 function generateDungeon(){
 
   resetMap()
 
   const rooms = []
 
-  const totalRooms = random(8,14)
+  const totalRooms = random(10,16)
 
-  for(let i=0;i<totalRooms;i++){
+  let attempts = 0
 
-    const w = random(4,8)
-    const h = random(4,8)
+  while(
+    rooms.length < totalRooms &&
+    attempts < 200
+  ){
+
+    attempts++
+
+    const w = random(3,5)
+    const h = random(3,5)
 
     const x = random(1,COLS-w-2)
     const y = random(1,ROWS-h-2)
 
+    if(roomOverlaps(x,y,w,h)){
+      continue
+    }
+
     carveRoom(x,y,w,h)
 
-    rooms.push({
+    const room = {
       x,
       y,
       w,
       h,
       cx:Math.floor(x+w/2),
       cy:Math.floor(y+h/2)
-    })
-  }
+    }
 
-  for(let i=1;i<rooms.length;i++){
+    if(rooms.length > 0){
 
-    carveCorridor(
-      rooms[i-1].cx,
-      rooms[i-1].cy,
-      rooms[i].cx,
-      rooms[i].cy
-    )
+      const prev = rooms[rooms.length-1]
+
+      carveCorridor(
+        prev.cx,
+        prev.cy,
+        room.cx,
+        room.cy
+      )
+    }
+
+    rooms.push(room)
   }
 
   const startRoom = rooms[0]
