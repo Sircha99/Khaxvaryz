@@ -1,27 +1,33 @@
 const canvas = document.getElementById("mapCanvas")
 const ctx = canvas.getContext("2d")
 
-const TILE = 40
+const TILE = 32
+const COLS = 35
+const ROWS = 25
 
-const MAP_WIDTH = 30
-const MAP_HEIGHT = 22
+let map = []
 
-const map = []
+function random(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min
+}
 
-function createMap(){
+function resetMap(){
 
-  for(let y=0;y<MAP_HEIGHT;y++){
+  map = []
 
-    map[y] = []
+  for(let y=0;y<ROWS;y++){
 
-    for(let x=0;x<MAP_WIDTH;x++){
+    const row = []
 
-      map[y][x] = 0
+    for(let x=0;x<COLS;x++){
+      row.push(0)
     }
+
+    map.push(row)
   }
 }
 
-function createRoom(x,y,w,h,type){
+function carveRoom(x,y,w,h){
 
   for(let yy=y;yy<y+h;yy++){
 
@@ -30,26 +36,16 @@ function createRoom(x,y,w,h,type){
       if(
         xx > 0 &&
         yy > 0 &&
-        xx < MAP_WIDTH-1 &&
-        yy < MAP_HEIGHT-1
+        xx < COLS-1 &&
+        yy < ROWS-1
       ){
         map[yy][xx] = 1
       }
     }
   }
-
-  return {
-    x,
-    y,
-    w,
-    h,
-    centerX: Math.floor(x + w/2),
-    centerY: Math.floor(y + h/2),
-    type
-  }
 }
 
-function createCorridor(x1,y1,x2,y2){
+function carveCorridor(x1,y1,x2,y2){
 
   let x = x1
   let y = y1
@@ -58,89 +54,39 @@ function createCorridor(x1,y1,x2,y2){
 
     map[y][x] = 1
 
-    x += x < x2 ? 1 : -1
+    if(x < x2){
+      x++
+    }else{
+      x--
+    }
   }
 
   while(y !== y2){
 
     map[y][x] = 1
 
-    y += y < y2 ? 1 : -1
-  }
-}
-
-function random(min,max){
-
-  return Math.floor(
-    Math.random() * (max-min+1)
-  ) + min
-}
-
-function generateDungeon(){
-
-  createMap()
-
-  const rooms = []
-
-  const totalRooms = random(10,16)
-
-  let previousRoom = null
-
-  for(let i=0;i<totalRooms;i++){
-
-    const w = random(4,8)
-    const h = random(4,8)
-
-    const x = random(1,MAP_WIDTH-w-1)
-    const y = random(1,MAP_HEIGHT-h-1)
-
-    const type =
-      i === 0
-      ? "start"
-      : i === totalRooms-1
-      ? "boss"
-      : "normal"
-
-    const room = createRoom(x,y,w,h,type)
-
-    rooms.push(room)
-
-    if(previousRoom){
-
-      createCorridor(
-        previousRoom.centerX,
-        previousRoom.centerY,
-        room.centerX,
-        room.centerY
-      )
+    if(y < y2){
+      y++
+    }else{
+      y--
     }
-
-    previousRoom = room
   }
-
-  drawMap(rooms)
 }
 
-function drawMap(rooms){
+function drawMap(startRoom,bossRoom){
 
   ctx.clearRect(0,0,canvas.width,canvas.height)
 
   ctx.fillStyle = "#ffffff"
+  ctx.fillRect(0,0,canvas.width,canvas.height)
 
-  ctx.fillRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  )
+  for(let y=0;y<ROWS;y++){
 
-  for(let y=0;y<MAP_HEIGHT;y++){
-
-    for(let x=0;x<MAP_WIDTH;x++){
+    for(let x=0;x<COLS;x++){
 
       if(map[y][x] === 1){
 
-        ctx.fillStyle = "#dcdcdc"
+        ctx.fillStyle = "#e5e5e5"
 
         ctx.fillRect(
           x*TILE,
@@ -161,42 +107,77 @@ function drawMap(rooms){
     }
   }
 
-  rooms.forEach(room=>{
+  ctx.fillStyle = "green"
 
-    if(room.type === "start"){
+  ctx.beginPath()
 
-      ctx.fillStyle = "green"
+  ctx.arc(
+    startRoom.cx*TILE + TILE/2,
+    startRoom.cy*TILE + TILE/2,
+    8,
+    0,
+    Math.PI*2
+  )
 
-      ctx.beginPath()
+  ctx.fill()
 
-      ctx.arc(
-        room.centerX*TILE + TILE/2,
-        room.centerY*TILE + TILE/2,
-        10,
-        0,
-        Math.PI*2
-      )
+  ctx.fillStyle = "red"
 
-      ctx.fill()
-    }
+  ctx.beginPath()
 
-    if(room.type === "boss"){
+  ctx.arc(
+    bossRoom.cx*TILE + TILE/2,
+    bossRoom.cy*TILE + TILE/2,
+    8,
+    0,
+    Math.PI*2
+  )
 
-      ctx.fillStyle = "red"
+  ctx.fill()
+}
 
-      ctx.beginPath()
+function generateDungeon(){
 
-      ctx.arc(
-        room.centerX*TILE + TILE/2,
-        room.centerY*TILE + TILE/2,
-        10,
-        0,
-        Math.PI*2
-      )
+  resetMap()
 
-      ctx.fill()
-    }
-  })
+  const rooms = []
+
+  const totalRooms = random(8,14)
+
+  for(let i=0;i<totalRooms;i++){
+
+    const w = random(4,8)
+    const h = random(4,8)
+
+    const x = random(1,COLS-w-2)
+    const y = random(1,ROWS-h-2)
+
+    carveRoom(x,y,w,h)
+
+    rooms.push({
+      x,
+      y,
+      w,
+      h,
+      cx:Math.floor(x+w/2),
+      cy:Math.floor(y+h/2)
+    })
+  }
+
+  for(let i=1;i<rooms.length;i++){
+
+    carveCorridor(
+      rooms[i-1].cx,
+      rooms[i-1].cy,
+      rooms[i].cx,
+      rooms[i].cy
+    )
+  }
+
+  const startRoom = rooms[0]
+  const bossRoom = rooms[rooms.length-1]
+
+  drawMap(startRoom,bossRoom)
 }
 
 generateDungeon()
