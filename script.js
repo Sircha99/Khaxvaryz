@@ -78,7 +78,13 @@ function drawMap(startRoom,bossRoom){
   ctx.clearRect(0,0,canvas.width,canvas.height)
 
   ctx.fillStyle = "#ffffff"
-  ctx.fillRect(0,0,canvas.width,canvas.height)
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  )
 
   for(let y=0;y<ROWS;y++){
 
@@ -114,7 +120,7 @@ function drawMap(startRoom,bossRoom){
   ctx.arc(
     startRoom.cx*TILE + TILE/2,
     startRoom.cy*TILE + TILE/2,
-    8,
+    10,
     0,
     Math.PI*2
   )
@@ -128,7 +134,7 @@ function drawMap(startRoom,bossRoom){
   ctx.arc(
     bossRoom.cx*TILE + TILE/2,
     bossRoom.cy*TILE + TILE/2,
-    8,
+    10,
     0,
     Math.PI*2
   )
