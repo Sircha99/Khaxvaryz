@@ -1,74 +1,202 @@
-const roomColors = {
+const canvas = document.getElementById("mapCanvas")
+const ctx = canvas.getContext("2d")
 
-    y += 28
-  })
+const TILE = 40
+
+const MAP_WIDTH = 30
+const MAP_HEIGHT = 22
+
+const map = []
+
+function createMap(){
+
+  for(let y=0;y<MAP_HEIGHT;y++){
+
+    map[y] = []
+
+    for(let x=0;x<MAP_WIDTH;x++){
+
+      map[y][x] = 0
+    }
+  }
+}
+
+function createRoom(x,y,w,h,type){
+
+  for(let yy=y;yy<y+h;yy++){
+
+    for(let xx=x;xx<x+w;xx++){
+
+      if(
+        xx > 0 &&
+        yy > 0 &&
+        xx < MAP_WIDTH-1 &&
+        yy < MAP_HEIGHT-1
+      ){
+        map[yy][xx] = 1
+      }
+    }
+  }
+
+  return {
+    x,
+    y,
+    w,
+    h,
+    centerX: Math.floor(x + w/2),
+    centerY: Math.floor(y + h/2),
+    type
+  }
+}
+
+function createCorridor(x1,y1,x2,y2){
+
+  let x = x1
+  let y = y1
+
+  while(x !== x2){
+
+    map[y][x] = 1
+
+    x += x < x2 ? 1 : -1
+  }
+
+  while(y !== y2){
+
+    map[y][x] = 1
+
+    y += y < y2 ? 1 : -1
+  }
+}
+
+function random(min,max){
+
+  return Math.floor(
+    Math.random() * (max-min+1)
+  ) + min
 }
 
 function generateDungeon(){
 
-  ctx.clearRect(0,0,canvas.width,canvas.height)
-
-  ctx.fillStyle = "#0b0f16"
-  ctx.fillRect(0,0,canvas.width,canvas.height)
-
-  drawLegend()
+  createMap()
 
   const rooms = []
 
-  let currentX = 700
-  let currentY = 100
+  const totalRooms = random(10,16)
 
-  const totalRooms = 15
+  let previousRoom = null
 
   for(let i=0;i<totalRooms;i++){
 
-    const type =
-      i === totalRooms-1
-      ? "Boss"
-      : random(roomTypes)
+    const w = random(4,8)
+    const h = random(4,8)
 
-    const room = {
-      id:i+1,
-      name:generateRoomName(type),
-      type,
-      x:currentX,
-      y:currentY,
-      width:140,
-      height:100
-    }
+    const x = random(1,MAP_WIDTH-w-1)
+    const y = random(1,MAP_HEIGHT-h-1)
+
+    const type =
+      i === 0
+      ? "start"
+      : i === totalRooms-1
+      ? "boss"
+      : "normal"
+
+    const room = createRoom(x,y,w,h,type)
 
     rooms.push(room)
 
-    const direction = Math.floor(Math.random()*4)
+    if(previousRoom){
 
-    if(direction === 0){
-      currentX += 220
+      createCorridor(
+        previousRoom.centerX,
+        previousRoom.centerY,
+        room.centerX,
+        room.centerY
+      )
     }
 
-    if(direction === 1){
-      currentX -= 220
-    }
-
-    if(direction === 2){
-      currentX += 100
-    }
-
-    if(direction === 3){
-      currentX -= 100
-    }
-
-    currentY += 130
+    previousRoom = room
   }
 
-  for(let i=1;i<rooms.length;i++){
-    drawConnection(rooms[i-1],rooms[i])
+  drawMap(rooms)
+}
+
+function drawMap(rooms){
+
+  ctx.clearRect(0,0,canvas.width,canvas.height)
+
+  ctx.fillStyle = "#ffffff"
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  )
+
+  for(let y=0;y<MAP_HEIGHT;y++){
+
+    for(let x=0;x<MAP_WIDTH;x++){
+
+      if(map[y][x] === 1){
+
+        ctx.fillStyle = "#dcdcdc"
+
+        ctx.fillRect(
+          x*TILE,
+          y*TILE,
+          TILE,
+          TILE
+        )
+
+        ctx.strokeStyle = "#999"
+
+        ctx.strokeRect(
+          x*TILE,
+          y*TILE,
+          TILE,
+          TILE
+        )
+      }
+    }
   }
 
   rooms.forEach(room=>{
-    drawRoom(room)
-  })
 
-  drawInfo(rooms)
+    if(room.type === "start"){
+
+      ctx.fillStyle = "green"
+
+      ctx.beginPath()
+
+      ctx.arc(
+        room.centerX*TILE + TILE/2,
+        room.centerY*TILE + TILE/2,
+        10,
+        0,
+        Math.PI*2
+      )
+
+      ctx.fill()
+    }
+
+    if(room.type === "boss"){
+
+      ctx.fillStyle = "red"
+
+      ctx.beginPath()
+
+      ctx.arc(
+        room.centerX*TILE + TILE/2,
+        room.centerY*TILE + TILE/2,
+        10,
+        0,
+        Math.PI*2
+      )
+
+      ctx.fill()
+    }
+  })
 }
 
 generateDungeon()
