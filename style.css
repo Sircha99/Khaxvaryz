@@ -1,0 +1,55 @@
+body {
+  background: #18181b;
+  color: white;
+  font-family: Arial;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: auto;
+}
+
+h1 {
+  font-size: 40px;
+  margin-bottom: 20px;
+}
+
+button {
+  background: darkred;
+  color: white;
+  border: none;
+  padding: 15px 25px;
+  font-size: 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 30px;
+}
+
+button:hover {
+  background: red;
+}
+
+#dungeon {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.room {
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 15px;
+  padding: 20px;
+}
+
+.room h2 {
+  margin-top: 0;
+}
+
+.boss {
+  color: red;
+  font-weight: bold;
+  font-size: 22px;
+}
